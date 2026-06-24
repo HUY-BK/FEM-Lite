@@ -11,10 +11,10 @@ from torch.utils.data import Dataset, DataLoader
 import torchvision
 from torchvision import transforms
 
-
+# dataloder for Skin Dataset
 class RandomCrop(transforms.RandomResizedCrop):
   def __call__(self, imgs):
-    i, j, h, w = self.get_params(imgs[0], self.scale, self.ratio) # lay tham so cat ngau nhien
+    i, j, h, w = self.get_params(imgs[0], self.scale, self.ratio) 
     for imgCount in range(len(imgs)):
         imgs[imgCount] = transforms.functional.resized_crop(imgs[imgCount], i, j, h, w, self.size, self.interpolation)
     return imgs
@@ -84,7 +84,6 @@ class PH2Loader(Dataset):
     return image, mask
 
 # dataloader for ultrasound dataset
-############ dataset busi
 import numpy as np
 import torch
 from PIL import Image
@@ -93,12 +92,9 @@ import cv2
 
 import torchvision
 from torchvision import transforms
-from torchvision.transforms import functional as TF   # 👈 functional từ torchvision
-                  # 👈 nếu sau này cần dùng hàm loss, conv... của torch
-
+from torchvision.transforms import functional as TF 
 from torch.utils.data import Dataset, DataLoader
 
-# --------- Elastic deformation (dùng OpenCV) ----------
 def elastic_deformation(image, mask, alpha=50, sigma=6, p=0.3):
     if torch.rand(1) > p:
         return image, mask
@@ -244,7 +240,6 @@ class PolypLoader(Dataset):
         self.rotate_p = 0.5
         self.deg_range = (-15, 15)
 
-        # 🎨 Thêm ColorJitter cho image
         self.color_jitter = transforms.ColorJitter(
             brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1
         )
@@ -280,8 +275,8 @@ class PolypLoader(Dataset):
         image, mask = self.hflip(image, mask)
         image, mask = self.vflip(image, mask)
 
-        # 🎨 Áp dụng ColorJitter CHỈ CHO IMAGE
-        if torch.rand(1) < 0.8:   # tỉ lệ áp dụng 80%
+   
+        if torch.rand(1) < 0.8: 
             image = self.color_jitter(image)
 
         return image, mask

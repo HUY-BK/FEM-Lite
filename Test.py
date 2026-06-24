@@ -18,13 +18,10 @@ def compute_hd95(y_pred, y_true):
     try:
         return hd95_metric(y_pred, y_true)
     except:
-        return 100.0  # fallback nếu lỗi
+        return 100.0  
 @torch.no_grad()
 def compute_hd95_batch(y_pred_bin, y_true_bin):
-    """
-    y_pred_bin, y_true_bin: [B,1,H,W] {0,1}
-    Trả về HD95 trung bình trên batch. medpy cần numpy bool 2D.
-    """
+
     yb = y_pred_bin.detach().cpu().numpy().astype(bool)
     yt = y_true_bin.detach().cpu().numpy().astype(bool)
     B = yb.shape[0]

@@ -3,7 +3,7 @@ import torch
 import pytorch_lightning as pl
 import matplotlib.pyplot as plt
 import numpy as np
-from Model.LiteHAM-Net import *
+from Model.FEM_Lite import *
 from Metrics import *
 from Dataloader import *
 
@@ -59,12 +59,7 @@ class Segmentor(pl.LightningModule):
     return [optimizer], lr_schedulers
 # Training config
 
-# Placeholder imports for undefined classes
-# Replace these with actual imports from your project
-# Example: from your_module import Segmentor, ISICLoader
 
-
-# Parsing input arguments
 import argparse
 
 parser = argparse.ArgumentParser(description="Train a segmentation model.")
