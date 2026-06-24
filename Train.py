@@ -11,71 +11,52 @@ from Dataloader import *
 import os
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-model = LiteHAM_Net().to(device)
+model = FEM_Lite(1).to(device)
+model.train()
 
-# Lightning module
+
 class Segmentor(pl.LightningModule):
-    def __init__(self, model):
-        super().__init__()
-        self.model = model
+  def __init__(self, model):
+    super().__init__()
+    self.model = model
 
-    def forward(self, x):
-        return self.model(x)
+  def forward(self, x):
+    return self.model(x)
 
-    def _step(self, batch):
-        image, y_true = batch
-        y_pred = self.model(image)
+  def _step(self, batch):
+    image, y_true = batch
+    y_pred = self.model(image)
+    loss = EAW_DiceLoss()(y_pred, y_true)
+    dice = dice_score(y_pred, y_true)
+    iou = iou_score(y_pred, y_true)
 
-        loss = dice_tversky_loss(y_pred, y_true)
-        dice = dice_score(y_pred, y_true)
-        iou = iou_score(y_pred, y_true)
-        return loss, dice, iou
+    return loss , dice, iou
 
-    def training_step(self, batch, batch_idx):
-        loss, dice, iou = self._step(batch)
-        metrics = {"loss": loss, "train_dice": dice, "train_iou": iou}
-        self.log_dict(metrics, on_step=False, on_epoch=True, prog_bar=True)
-        return loss
+  def training_step(self, batch, batch_idx):
+    loss, dice, iou = self._step(batch)
+    metrics = {"loss": loss, "train_dice": dice, "train_iou":iou}
+    self.log_dict(metrics,on_step = False, on_epoch = True, prog_bar = True)
+    return loss
 
-    def validation_step(self, batch, batch_idx):
-        loss, dice, iou = self._step(batch)
-        metrics = {"val_loss":loss, "val_dice": dice, "val_iou": iou}
-        self.log_dict(metrics, prog_bar=True)
-        return metrics
 
-    def test_step(self, batch, batch_idx):
-        loss, dice, iou = self._step(batch)
-        metrics = {"loss":loss, "test_dice": dice, "test_iou": iou}
-        self.log_dict(metrics, prog_bar=True)
-        return metrics
+  def validation_step(self, batch, batch_idx):
+    loss, dice, iou = self._step(batch)
+    metrics = {"val_loss":loss, "val_dice": dice, "val_iou": iou}
+    self.log_dict(metrics, prog_bar=True)
+    return metrics
 
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="max",
-                                                         factor = 0.5, patience=5, verbose =True)
-        lr_schedulers = {"scheduler": scheduler, "monitor": "val_dice"}
-        return [optimizer], lr_schedulers
-class Segmentor(pl.LightningModule):
-    def __init__(self, model=model):
-        
-        super().__init__()
-        self.model = model
 
-    def forward(self, x):
-        return self.model(x)
+  def test_step(self, batch, batch_idx):
+    loss, dice, iou = self._step(batch)
+    metrics = {"loss":loss, "test_dice": dice, "test_iou": iou}
+    self.log_dict(metrics, prog_bar=True)
+    return metrics
 
-    def test_step(self, batch, batch_idx):
-        image, y_true = batch
-        y_pred = self.model(image)
-        loss = DiceLoss()(y_pred, y_true)
-        print(loss.cpu().numpy(), end = ' ')
-        # loss_test.append(loss.item())
-        dice = dice_score(y_pred, y_true)
-        iou = iou_score(y_pred, y_true)
-        metrics = {"Test Dice": dice, "Test Iou": iou}
-        self.log_dict(metrics, prog_bar=True)
-        return metrics
-    
+  def configure_optimizers(self):
+    optimizer = torch.optim.Adam(self.parameters(), lr = (1e-3))
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode = "max", factor = 0.5, patience = 8)
+    lr_schedulers = {"scheduler":scheduler, "monitor": "val_dice"}
+    return [optimizer], lr_schedulers
 # Training config
 
 # Placeholder imports for undefined classes
