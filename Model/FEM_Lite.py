@@ -63,7 +63,6 @@ class SpatialAttention(nn.Module):
         self.conv = nn.Conv2d(2, 1, kernel_size=kernel_size, padding=int((kernel_size-1)/2))
 
     def forward(self, x):
-        # Tính avg và max pooling trên chiều kênh
         max_pool = x.max(dim=1, keepdim=True)[0]  # [B, 1, H, W]
         avg_pool = x.mean(dim=1, keepdim=True)    # [B, 1, H, W]
         pool = torch.cat([max_pool, avg_pool], dim=1)  # [B, 2, H, W]
@@ -87,7 +86,6 @@ class ChannelAttention(nn.Module):
         avg = self.avg_pool(x)  # [B, C, 1, 1]
         max = self.max_pool(x)  # [B, C, 1, 1]
 
-        # Làm phẳng để đưa vào MLP
         avg = avg.view(x.size(0), -1)  # [B, C]
         max = max.view(x.size(0), -1)  # [B, C]
 
