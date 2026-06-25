@@ -1,9 +1,60 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from Encoder import MASF_Encoder, AC_Encoder, CCMA_Encoder
-from Decoder import MASF_Decoder, AC_Decoder, CCMA_Decoder
+from Model.MASF import MASF_Encoder, CCMA_Encoder
+from Model.CCMA import MASF_Decoder, CCMA_Decoder
 from Bottleneck import Bottleneck
+
+
+class AxialDW(nn.Module):
+    def __init__(self, dim, mixer_kernel, dilation = 1):
+        super().__init__()
+        h, w = mixer_kernel
+        self.dw_h = nn.Conv2d(dim, dim, kernel_size=(h, 1), padding='same', groups = dim, dilation = dilation)
+        self.dw_w = nn.Conv2d(dim, dim, kernel_size=(1, w), padding='same', groups = dim, dilation = dilation)
+
+    def forward(self, x):
+        x = x + self.dw_h(x) + self.dw_w(x)
+        return x
+
+class ConvBlock(nn.Module):
+  def __init__(self, in_c,mixer_kernel = (7,7)):
+    super().__init__()
+    self.adw = AxialDW(in_c, mixer_kernel = mixer_kernel, dilation = 1)
+    self.dw = nn.Conv2d(in_c, in_c, kernel_size = 3, padding = 1, groups = in_c )
+  def forward(self, x):
+    residual = x
+    x = self.adw(x)
+    x = self.dw(x)
+    return x
+
+class AC_Encoder(nn.Module):
+  def __init__(self, in_c, out_c):
+    super().__init__()
+    self.block = ConvBlock(in_c)
+    self.bn = nn.BatchNorm2d(in_c)
+    self.act = nn.ReLU()
+    self.pw  = nn.Conv2d(in_c, out_c, kernel_size = 1)
+    self.down = nn.MaxPool2d((2,2))
+  def forward(self, x):
+    x = self.block(x)
+
+    x = self.act(self.bn(x))
+    skip = x
+    x = self.pw(x)
+    x = self.down(x)
+    return x, skip
+  
+class AC_Decoder(nn.Module):
+  def __init__(self, in_c, out_c):
+    super().__init__()
+    self.block = ConvBlock(in_c)
+    self.pw = nn.Conv2d(in_c, out_c, kernel_size = 1)
+  def forward(self, x):
+    x = self.block(x)
+    x = self.pw(x)
+
+    return x
 
 class SpatialAttention(nn.Module):
     def __init__(self, kernel_size):

@@ -6,7 +6,7 @@ import numpy as np
 from Model.FEM_Lite import *
 from Metrics import *
 from Dataloader import *
-
+from EAW_Dice_Loss import EAW_DiceLoss
 
 import os
 device = 'cuda' if torch.cuda.is_available() else 'cpu'

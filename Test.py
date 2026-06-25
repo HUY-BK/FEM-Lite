@@ -6,6 +6,11 @@ import torch.nn.functional as F
 import numpy as np
 !pip install medpy
 from medpy.metric.binary import hd95 as hd95_metric
+from Model.FEM_Lite import *
+from metrics import *
+from Dataloader import *
+from EAW_Dice_Loss import EAW_DiceLoss
+
 x_test = np.load(args.path_image_test)
 y_test = np.load(args.path_label_test)
 @torch.no_grad()
