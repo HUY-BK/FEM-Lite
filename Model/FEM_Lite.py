@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from Model.MASF import MASF_Encoder, CCMA_Encoder
 from Model.CCMA import MASF_Decoder, CCMA_Decoder
-from Bottleneck import Bottleneck
+from Model.Bottleneck import Bottleneck
 
 
 class AxialDW(nn.Module):
